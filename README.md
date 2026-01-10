@@ -1,946 +1,302 @@
-# clothing-ai
+# Clothing AI - AI Outfit Coach
 
-That’s actually a very strong app idea — and it sits right at the intersection of AI, personalization, and a real daily pain point. Let me break it down clearly and honestly, including why it works, who it’s for, and what would make it succeed.
+> Your personal AI stylist that sees what you're wearing, knows your wardrobe, and tells you what to improve.
 
-⸻
+An AI-powered outfit coaching application that helps users make better fashion decisions through computer vision, machine learning, and personalized recommendations.
 
-The Core Idea (Why It’s Compelling)
+## 📋 Project Overview
 
-At its heart, this is:
+Clothing AI is a full-stack monorepo containing three main projects:
 
-“A personal AI stylist that sees what you’re wearing, knows your wardrobe, understands the context — and tells you what to improve.”
+- **Backend** - Laravel REST API for user management, wardrobe storage, and business logic
+- **AI Service** - Python FastAPI service for outfit analysis and ML operations
+- **Mobile** - Flutter mobile app for iOS and Android
 
-That’s powerful because:
-	•	People hate uncertainty around outfits
-	•	They want confirmation as much as advice
-	•	Styling is visual → perfect fit for AI vision
-	•	It’s repeat usage, not a one-off tool
+## 🏗️ Architecture
 
-This isn’t just “fashion AI” — it’s decision reduction.
+```
+clothing-ai/
+├── backend/          # Laravel 11 REST API
+├── ai-service/       # Python FastAPI AI service
+├── mobile/           # Flutter mobile app
+├── docs/             # Documentation
+├── .github/          # CI/CD workflows
+└── docker-compose.yml
+```
 
-⸻
+### Tech Stack
 
-How the Flow Could Work (User POV)
+| Component | Technology |
+|-----------|-----------|
+| **Backend API** | Laravel 11, PHP 8.2, PostgreSQL, Redis |
+| **AI Service** | Python 3.11, FastAPI, PyTorch, OpenAI, Anthropic |
+| **Vector DB** | Qdrant |
+| **Mobile** | Flutter 3.16+, Riverpod |
+| **Storage** | AWS S3 (production), MinIO (local) |
+| **Queue** | AWS SQS (production), Redis (local) |
+| **Auth** | Laravel Sanctum, OAuth (Google, Apple) |
+| **Payments** | Stripe, Apple IAP, Google Play Billing |
 
-1️⃣ Outfit Check (Daily Hook)
+## 🚀 Quick Start
 
-User:
-	•	Takes a photo of themselves
-	•	Says or selects:
-	•	Where they’re going (work, date, wedding, casual)
-	•	Time of day / season
-	•	Who they’re with (friends, colleagues, partner)
-	•	Vibe they want (smart, relaxed, confident, trendy)
+### Prerequisites
 
-AI responds with:
-	•	What works ✅
-	•	What clashes ❌
-	•	What could elevate it 🔧
-	•	Optional confidence score (“7.8/10 for smart-casual dinner”)
+- Docker and Docker Compose
+- Make (optional, for convenience commands)
+- Git
 
-This alone is already valuable.
+### Setup & Run
 
-⸻
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/clothing-ai.git
+cd clothing-ai
 
-2️⃣ Wardrobe Intelligence (The Moat)
+# Initial setup (copies .env files, starts services, runs migrations)
+make setup
 
-User gradually:
-	•	Takes photos of clothes in their wardrobe
-	•	Categories are auto-detected:
-	•	Tops, trousers, shoes, jackets, accessories
-	•	Color, fabric, formality level
+# Or manually:
+cp .env.example .env
+docker-compose up -d
+docker-compose exec backend php artisan migrate
+```
 
-Now the AI can say:
+### Access Services
 
-“Swap those trainers for your brown Chelsea boots — they’ll elevate this for dinner.”
+- **Backend API**: http://localhost:8000
+- **AI Service**: http://localhost:8001
+- **AI Service Docs**: http://localhost:8001/docs
+- **Mailpit (Email)**: http://localhost:8025
+- **MinIO Console**: http://localhost:9001
 
-This is where it beats Pinterest, mirrors, and friends.
+### Development Commands
 
-⸻
+```bash
+# Start all services
+make up
 
-3️⃣ “What Should I Wear?” Mode
+# View logs
+make logs
 
-Instead of:
-	•	Standing in front of the wardrobe for 15 minutes
+# Stop all services
+make down
 
-User asks:
+# Run tests
+make test
 
-“Lunch with colleagues, casual but sharp, warm weather.”
+# Clean everything
+make clean
 
-AI:
-	•	Builds complete outfits from their clothes
-	•	Shows 2–3 options
-	•	Explains why each works
+# Rebuild containers
+make rebuild
+```
 
-This explanation matters — it teaches the user style over time.
+## 📱 Projects
 
-⸻
+### Backend (Laravel)
 
-Why This Could Make Money 💰
+Laravel-based REST API handling:
+- User authentication & profiles
+- Wardrobe item management
+- Outfit session processing
+- Subscription management
+- Media upload with pre-signed URLs
+- Background job processing
+
+[📖 Backend Documentation](./backend/README.md)
+
+### AI Service (FastAPI)
+
+Python AI service providing:
+- Outfit photo analysis
+- Wardrobe item parsing
+- Vector embeddings generation
+- Outfit recommendations
+- Style scoring & feedback
+
+[📖 AI Service Documentation](./ai-service/README.md)
+
+### Mobile (Flutter)
 
-This category historically monetizes very well, especially with women — but also increasingly with men who:
-	•	Care about appearance
-	•	Don’t want to think about fashion
-	•	Want quiet confidence, not trend chasing
+Cross-platform mobile app featuring:
+- Outfit photo capture & analysis
+- Wardrobe digitization
+- AI-powered outfit builder
+- Saved outfits & packing lists
+- Freemium subscription model
 
-Monetization Options
+[📖 Mobile Documentation](./mobile/README.md)
 
-Freemium (very strong fit):
-	•	Free:
-	•	Basic outfit feedback
-	•	Limited wardrobe items
-	•	Paid (€6–€12/month):
-	•	Full wardrobe intelligence
-	•	Unlimited outfit analysis
-	•	Occasion-specific advice
-	•	Seasonal suggestions
-	•	Packing lists for trips
+## 🎯 Key Features
+
+### 1️⃣ Outfit Check (Daily Hook)
+- Take a photo of your outfit
+- Get instant AI feedback
+- Receive improvement suggestions
+- See confidence scores
 
-Future Upsell Paths:
-	•	“Fill the gap” suggestions (no direct selling initially)
-	•	Capsule wardrobe optimization
-	•	Confidence / body-type tuning
-	•	Partner / date-night specific advice
-
-⸻
-
-What Makes This Different From Existing Apps
-
-Most competitors fail because they:
-	•	Are too generic
-	•	Don’t see your actual clothes
-	•	Push shopping too hard
-	•	Don’t explain why something works
-
-Your idea wins if it:
-	•	Uses real photos, not catalogs
-	•	Is context-aware
-	•	Feels like a trusted advisor, not an ad engine
-	•	Improves over time as it learns the user
-
-⸻
-
-Critical Success Factors (Being Realistic)
-
-⚠️ Hard Parts
-	•	Clothing image quality varies a lot
-	•	Lighting & pose matter
-	•	AI feedback must feel human, not robotic
-	•	Early onboarding must be very smooth
-
-✅ Solvable With:
-	•	Guided photo capture (“stand back”, “neutral light”)
-	•	Confidence-based language (“This works, but…”)
-	•	Progressive wardrobe scanning (not all at once)
-	•	Strong prompt design for explanations
-
-⸻
-
-Below is a full technical specification for an “AI Outfit Coach + Wardrobe” app: users take a selfie in an outfit, describe the context, and the system gives feedback + suggests improvements and full outfit options from the user’s digitized wardrobe.
-
-I’m going to assume a production-grade build with:
-	•	Mobile app (iOS + Android)
-	•	Backend API (accounts, wardrobe, outfits, billing, logs)
-	•	AI services (vision + reasoning + retrieval from wardrobe)
-	•	Storage + infra + analytics + admin
-	•	Privacy + safety built in (because you’ll be handling user photos)
-
-You can absolutely trim this into an MVP later, but this is the “whole app” spec.
-
-⸻
-
-1) Product Scope
-
-1.1 Primary user journeys
-
-A) Outfit Feedback (daily hook)
-	1.	User takes a photo (“fit check”)
-	2.	User describes context:
-	•	destination / occasion
-	•	formality level
-	•	weather (optional auto)
-	•	who with
-	•	vibe goal (smart, relaxed, edgy, etc.)
-	3.	App returns:
-	•	what works
-	•	what to change (2–4 specific suggestions)
-	•	what to add (outerwear, accessories, shoes, bag)
-	•	optional alternatives from their wardrobe (if wardrobe present)
-	•	confidence score & reasoning
-
-B) Wardrobe Digitization (long-term moat)
-	1.	User takes photos of wardrobe items:
-	•	single item on plain background (recommended)
-	•	or “closet hanger shot” (supported)
-	2.	App auto-detects:
-	•	category (jacket/shirt/pants/shoes/bag/etc.)
-	•	color(s), patterns
-	•	style tags
-	•	seasonality, formality
-	3.	User confirms/edits
-	4.	System stores:
-	•	cleaned thumbnail
-	•	segmentation mask (optional)
-	•	embeddings for retrieval
-	•	structured metadata
-
-C) Outfit Builder (“What should I wear?”)
-	1.	User selects context
-	2.	App generates 3 outfit options from wardrobe
-	3.	User can:
-	•	swap single item
-	•	ask follow-up (“more formal”, “warmer”, “add color”)
-	•	save outfit
-	•	create packing list
-
-D) Closet gaps (“what should I buy?”)
-
-Optional: later phase
-	•	Identify missing staples or gaps without heavy commerce push.
-
-⸻
-
-2) Non-functional Requirements
-
-2.1 Performance & latency targets
-	•	Outfit feedback response: P95 < 8s
-	•	Wardrobe item ingestion: P95 < 10s (async ok)
-	•	Wardrobe search/retrieval: P95 < 300ms (vector DB)
-
-2.2 Availability & scalability
-	•	99.9% API uptime target
-	•	Horizontal scaling for AI inference (stateless workers)
-	•	Background processing via queue
-
-2.3 Privacy & security baseline
-	•	All photos encrypted in transit (TLS) and at rest
-	•	Default: private photos, not discoverable
-	•	User can delete images + wardrobe permanently
-	•	Strict access control (per-user object storage paths)
-	•	Option: on-device face blurring before upload (recommended)
-
-2.4 Compliance posture (practical)
-	•	GDPR: deletion, export, consent, data minimization
-	•	Avoid storing sensitive biometric identifiers (no face recognition needed)
-
-⸻
-
-3) System Architecture Overview
-
-3.1 Components
-
-Mobile
-	•	Flutter (or React Native)
-	•	Camera + upload manager
-	•	Local caching + offline queue
-	•	UI for feedback + wardrobe browsing
-
-Core API (Business backend)
-	•	Laravel (or Symfony) REST API
-	•	Postgres database
-	•	Redis cache
-	•	Queue (SQS/RabbitMQ/Redis queue)
-	•	Object storage (S3-compatible) for images
-
-AI Service (Inference + orchestration)
-	•	Python FastAPI service
-	•	Worker pool for vision tasks
-	•	LLM integration for reasoning + recommendations
-	•	Embedding generation + vector DB indexing
-	•	Vector DB (Qdrant / Pinecone)
-	•	Optional: separate “vision pipeline” service
-
-Analytics & Observability
-	•	Event tracking (PostHog / Segment)
-	•	Error tracking (Sentry)
-	•	Metrics (Prometheus/Grafana)
-	•	Logging (ELK / Cloud logging)
-
-Admin & moderation
-	•	Admin panel (Laravel Nova / custom)
-	•	Flagged content queue
-	•	Prompt configs & A/B tests
-
-⸻
-
-4) Data Model (Postgres)
-
-Below are suggested tables (fields include type hints). Use UUIDs.
-
-4.1 Users & auth
-
-users
-	•	id uuid pk
-	•	email text unique
-	•	password_hash text nullable (if social login)
-	•	created_at, updated_at
-
-user_profiles
-	•	user_id uuid pk fk(users)
-	•	display_name text
-	•	gender text nullable (avoid forcing)
-	•	birth_year int nullable
-	•	height_cm int nullable
-	•	body_notes text nullable (user-defined)
-	•	style_preferences jsonb (colors, fits, dislikes)
-	•	created_at, updated_at
-
-auth_identities
-	•	id uuid pk
-	•	user_id uuid fk
-	•	provider enum: google, apple, facebook
-	•	provider_subject text (provider unique id)
-	•	created_at
-
-4.2 Images
-
-media_objects
-	•	id uuid pk
-	•	user_id uuid fk
-	•	type enum: outfit_photo, wardrobe_item_photo, avatar, other
-	•	storage_key text (s3 path)
-	•	mime_type text
-	•	width int, height int
-	•	sha256 text (dedupe/integrity)
-	•	created_at
-
-media_derivatives
-	•	id uuid pk
-	•	media_object_id uuid fk
-	•	kind enum: thumbnail, mask, cropped_item, face_blurred
-	•	storage_key text
-	•	created_at
-
-4.3 Wardrobe
-
-wardrobe_items
-	•	id uuid pk
-	•	user_id uuid fk
-	•	primary_photo_id uuid fk(media_objects)
-	•	category enum: top, bottom, outerwear, dress, shoes, bag, accessory
-	•	sub_category text (tshirt, blazer, jeans, sneakers…)
-	•	colors text[] (or jsonb)
-	•	pattern text nullable
-	•	material text nullable
-	•	brand text nullable
-	•	size_label text nullable
-	•	fit enum nullable: slim, regular, relaxed, oversized
-	•	season_tags text[] (summer, winter, all-season)
-	•	formality smallint (0–10)
-	•	style_tags text[] (smart-casual, minimal, streetwear…)
-	•	is_active boolean default true
-	•	created_at, updated_at
-
-wardrobe_item_embeddings
-	•	wardrobe_item_id uuid pk fk
-	•	embedding_provider text (e.g. “text-embedding-3-large”, “clip”)
-	•	vector_id text (id in Qdrant)
-	•	updated_at
-
-wardrobe_item_attributes (optional if you want normalized attrs)
-	•	wardrobe_item_id
-	•	key
-	•	value
-
-4.4 Outfit sessions & recommendations
-
-outfit_sessions
-	•	id uuid pk
-	•	user_id uuid fk
-	•	outfit_photo_id uuid fk(media_objects)
-	•	context jsonb (occasion, location, vibe, who_with, weather)
-	•	status enum: queued, processing, done, failed
-	•	created_at, updated_at
-
-outfit_feedback
-	•	id uuid pk
-	•	outfit_session_id uuid fk
-	•	overall_score numeric(4,2) (0–10)
-	•	summary text
-	•	positives jsonb (list)
-	•	issues jsonb (list)
-	•	suggestions jsonb (list of structured suggestions)
-	•	created_at
-
-outfit_recommendations
-	•	id uuid pk
-	•	outfit_session_id uuid fk
-	•	type enum: swap_item, add_layer, add_accessory, full_outfit
-	•	items uuid[] (wardrobe item ids)
-	•	explanation text
-	•	confidence numeric(4,2)
-	•	rank int
-	•	created_at
-
-saved_outfits
-	•	id uuid pk
-	•	user_id uuid fk
-	•	name text
-	•	items uuid[] (wardrobe item ids)
-	•	occasion_tags text[]
-	•	created_at
-
-4.5 Conversations (optional but powerful)
-
-style_threads
-	•	id uuid pk
-	•	user_id uuid fk
-	•	created_at
-
-style_messages
-	•	id uuid pk
-	•	thread_id uuid fk
-	•	role enum: user, assistant, system
-	•	content text
-	•	metadata jsonb (links to outfit_session, wardrobe items referenced)
-	•	created_at
-
-4.6 Billing
-
-subscriptions
-	•	id uuid pk
-	•	user_id uuid fk
-	•	provider enum: apple, google, stripe
-	•	provider_customer_id text
-	•	provider_subscription_id text
-	•	status enum: active, trialing, canceled, past_due
-	•	current_period_end timestamptz
-	•	created_at, updated_at
-
-⸻
-
-5) API Specification (REST)
-
-Assume:
-	•	Base URL: /api/v1
-	•	Auth: JWT or session tokens, plus OAuth identity linking
-	•	All requests use JSON; uploads use pre-signed URLs
-
-5.1 Auth
-
-POST /auth/register
-	•	email/password or social token
-	•	returns: access token, refresh token
+### 2️⃣ Wardrobe Intelligence
+- Photograph your wardrobe items
+- Auto-detection of category, color, style
+- Smart organization and tagging
+- Visual wardrobe management
+
+### 3️⃣ Outfit Builder
+- Generate complete outfits from your wardrobe
+- Context-aware recommendations (occasion, weather, vibe)
+- Swap individual items
+- Save favorite combinations
 
-POST /auth/login
+### 4️⃣ Smart Recommendations
+- AI-powered styling advice
+- Learn your preferences over time
+- Identify wardrobe gaps
+- Seasonal suggestions
+
+## 🔧 Development
 
-POST /auth/refresh
+### Running Individual Services
 
-POST /auth/logout
+#### Backend Only
+```bash
+cd backend
+composer install
+php artisan serve
+```
 
-POST /auth/oauth/:provider
-	•	body: provider_token
-	•	returns tokens
+#### AI Service Only
+```bash
+cd ai-service
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
 
-5.2 Media upload (pre-signed)
+#### Mobile Only
+```bash
+cd mobile
+flutter pub get
+flutter run
+```
 
-POST /media/presign
+### Database Migrations
 
-Request:
+```bash
+# Create migration
+docker-compose exec backend php artisan make:migration create_table_name
 
-{ "type":"outfit_photo", "mimeType":"image/jpeg", "fileName":"IMG_123.jpg" }
+# Run migrations
+docker-compose exec backend php artisan migrate
 
-Response:
+# Rollback
+docker-compose exec backend php artisan migrate:rollback
+```
 
-{ "uploadUrl":"...", "storageKey":"users/{userId}/outfits/{uuid}.jpg", "mediaObjectId":"uuid" }
+### Running Tests
 
-POST /media/complete
+```bash
+# All tests
+make test
 
-Body:
+# Backend only
+cd backend && php artisan test
 
-{ "mediaObjectId":"uuid", "width":1170, "height":2532, "sha256":"..." }
+# AI service only
+cd ai-service && pytest
 
-5.3 Wardrobe
+# Mobile only
+cd mobile && flutter test
+```
 
-POST /wardrobe/items
+## 📊 Database Schema
 
-Body:
+See [Database Schema Documentation](./docs/SPECIFICATION.md#4-data-model-postgres) for detailed schema information including:
+- Users & authentication
+- Wardrobe items
+- Outfit sessions & feedback
+- Subscriptions & billing
 
-{ "primaryPhotoId":"uuid" }
+## 🔐 Environment Configuration
 
-Response: item id (status “processing”)
+Each project has its own `.env` file:
 
-GET /wardrobe/items
+- **Root** `.env` - Docker Compose configuration
+- **Backend** `backend/.env` - Laravel configuration
+- **AI Service** `ai-service/.env` - Python service configuration
 
-Query:
-	•	category, color, tag, season, formalityRange
-	•	pagination
+Copy the `.env.example` files and configure:
+- Database credentials
+- API keys (OpenAI, Anthropic)
+- OAuth credentials (Google, Apple)
+- Payment provider keys (Stripe)
+- AWS credentials
 
-GET /wardrobe/items/:id
-
-PATCH /wardrobe/items/:id
+## 🚢 Deployment
 
-Edits category, colors, tags, size, etc.
-
-DELETE /wardrobe/items/:id
-
-Soft delete or hard delete
-
-POST /wardrobe/items/:id/reindex
+### Backend & AI Service
+- Docker containers via ECS/Fargate or Kubernetes
+- PostgreSQL on AWS RDS
+- Redis on ElastiCache
+- S3 for media storage
+- SQS for job queues
 
-Regenerate embeddings + update vector DB
-
-5.4 Outfit feedback
-
-POST /outfits/sessions
-
-Body:
-
-{
-  "outfitPhotoId":"uuid",
-  "context":{
-    "occasion":"dinner",
-    "location":"Salamanca",
-    "vibe":"smart casual",
-    "whoWith":"friends",
-    "notes":"It's cold and may rain"
-  }
-}
-
-Response:
-
-{ "sessionId":"uuid", "status":"queued" }
-
-GET /outfits/sessions/:id
+### Mobile
+- iOS: TestFlight → App Store
+- Android: Internal Testing → Google Play
+- CI/CD via Fastlane
 
-Returns status + feedback when ready
-
-GET /outfits/sessions/:id/feedback
+See individual project READMEs for detailed deployment instructions.
 
-GET /outfits/sessions/:id/recommendations
-
-POST /outfits/sessions/:id/chat
-
-Body: { "message":"Make it more formal" }
-Returns assistant message + updated recs
+## 📖 Documentation
 
-5.5 Saved outfits
+- [📋 Full Product Specification](./docs/SPECIFICATION.md)
+- [🗄️ Database Schema](./docs/SPECIFICATION.md#4-data-model-postgres)
+- [🔌 API Documentation](http://localhost:8000/api/documentation) (when running)
+- [🤖 AI Service API](http://localhost:8001/docs) (when running)
 
-POST /saved-outfits
+## 🧪 Testing Strategy
 
-GET /saved-outfits
+- **Backend**: PHPUnit, Feature tests, Unit tests
+- **AI Service**: Pytest, Golden dataset tests, Schema validation
+- **Mobile**: Flutter widget tests, Integration tests
 
-DELETE /saved-outfits/:id
+## 🔄 CI/CD
 
-5.6 Subscription
+GitHub Actions workflows for:
+- Automated testing on push/PR
+- Code linting and formatting
+- Docker image building
+- Deployment to staging/production
 
-POST /billing/verify
-	•	iOS/Google purchase receipt validation
-	•	updates subscriptions
+## 🤝 Contributing
 
-GET /billing/status
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-⸻
+## 📝 License
 
-6) AI / ML Specification
+This project is licensed under the MIT License.
 
-This is the heart of the product.
+## 🙋 Support
 
-6.1 High-level AI functions
-	1.	Outfit analysis from photo (vision)
-	2.	Wardrobe item parsing (vision + tagging)
-	3.	Retrieval: find matching items from wardrobe (vector search)
-	4.	Reasoning & explanation: LLM produces actionable advice
-	5.	Outfit generation: assemble item sets under constraints
+For questions or issues:
+- Open an issue on GitHub
+- Check the [documentation](./docs/)
+- Review individual project READMEs
 
-6.2 Vision pipeline
+## 🎨 Product Vision
 
-A) Outfit photo analysis output schema
+Clothing AI aims to be your personal AI stylist that:
+- **Reduces decision fatigue** around daily outfit choices
+- **Builds confidence** through constructive feedback
+- **Maximizes your wardrobe** by suggesting new combinations
+- **Teaches style** through explanations, not just recommendations
+- **Respects privacy** with secure, encrypted photo storage
 
-From the outfit photo, produce structured signals:
+For the complete product vision and specification, see [SPECIFICATION.md](./docs/SPECIFICATION.md).
 
-{
-  "garments_detected":[
-    {"type":"top","desc":"white oxford shirt","color":["white"],"pattern":"solid","fit":"regular"},
-    {"type":"bottom","desc":"dark blue jeans","color":["navy"],"pattern":"solid"},
-    {"type":"shoes","desc":"white sneakers","color":["white"]}
-  ],
-  "style_signals":{
-    "formality":5.8,
-    "cohesion":7.2,
-    "contrast":6.0,
-    "season_fit":{"winter":0.6,"summer":0.2},
-    "silhouette":"balanced",
-    "notes":["clean palette","casual footwear"]
-  },
-  "risks":[
-    {"issue":"too casual for formal dinner","confidence":0.72}
-  ]
-}
+---
 
-Implementation approaches:
-	•	Segmentation / detection: YOLO + segmentation or a managed vision model
-	•	Embeddings: CLIP-like embeddings for similarity
-	•	Color extraction: from segmented regions
-	•	Optional: pose detection to improve segmentation quality
-
-B) Wardrobe item ingestion output schema
-
-{
-  "category":"outerwear",
-  "sub_category":"blazer",
-  "colors":["navy"],
-  "pattern":"solid",
-  "material":"wool",
-  "formality":8,
-  "season_tags":["autumn","winter"],
-  "style_tags":["smart","classic","minimal"]
-}
-
-6.3 Vector retrieval strategy
-
-What gets embedded?
-
-For each wardrobe item:
-	•	image embedding (CLIP)
-	•	text embedding (LLM-embedding) built from metadata string:
-	•	“navy wool blazer, smart, classic, winter, formal…”
-
-Store in vector DB:
-	•	either one combined vector
-	•	or two collections and fuse results
-
-Qdrant schema (example)
-
-Collection: wardrobe_items
-	•	payload: user_id, category, colors, formality, season_tags
-	•	vector: 768/1024 dims (depends on model)
-
-Queries:
-	•	“matching shoes for outfit context smart casual dinner”
-	•	filter by user_id
-	•	filter by category when needed
-
-6.4 Outfit generation algorithm (hybrid)
-
-You want deterministic guardrails + LLM creativity.
-
-Step 1: Constraints
-
-From context:
-	•	desired formality range
-	•	weather constraints (warm layer, waterproof)
-	•	vibe tags
-	•	any user preferences (avoid colors, avoid skinny fit, etc.)
-
-Step 2: Build candidate pools
-
-For each slot:
-	•	top, bottom, shoes
-	•	optional outerwear
-	•	optional accessories (watch, bag, belt)
-
-Use vector search + filters to get top K (e.g., 30 each).
-
-Step 3: Score combinations
-
-Score function (hand-built):
-	•	color harmony score (complement/analogous/neutral)
-	•	formality alignment score
-	•	season/weather alignment score
-	•	fit/silhouette balance score
-	•	repetition penalty (don’t show same shoes in all options)
-	•	user preference match boost
-
-Generate N combinations (beam search):
-	•	keep top 50 partials, expand, keep top 50, etc.
-Return top 3–5.
-
-Step 4: LLM explanation + final polish
-
-LLM receives:
-	•	chosen outfit items (structured)
-	•	context
-	•	“why these were chosen”
-It outputs:
-	•	explanation
-	•	1–2 alternatives
-	•	swap suggestions
-
-6.5 Prompting specification (LLM)
-
-System prompt (style assistant)
-	•	Strictly non-judgmental, constructive
-	•	No body shaming
-	•	Focus on fit, proportions, context appropriateness, cohesion
-	•	Always output JSON conforming to schema
-
-Outfit feedback response schema (LLM output)
-
-{
-  "overall_score": 7.6,
-  "summary":"Clean smart-casual base. Sneakers make it more casual than the setting.",
-  "positives":[
-    {"title":"Cohesive neutrals","detail":"White + navy is crisp and reliable."}
-  ],
-  "issues":[
-    {"title":"Footwear formality mismatch","detail":"If the venue is nicer, the sneakers undercut the look."}
-  ],
-  "suggestions":[
-    {"type":"swap","target":"shoes","instruction":"Swap to brown leather boots or loafers."},
-    {"type":"add","target":"outerwear","instruction":"Add a navy blazer to elevate instantly."}
-  ],
-  "followups":[
-    "Is it indoors or outdoors most of the night?",
-    "Do you want to look more classic or more modern?"
-  ]
-}
-
-6.6 Safety / policy rules
-
-Hard rules:
-	•	If user is a minor (or looks like it): do not sexualize
-	•	Avoid content about attractiveness ratings
-	•	Avoid “you look fat/ugly” type outputs
-	•	If photo contains nudity: block and ask for clothed photo
-
-⸻
-
-7) Backend Processing (Queues + Workflows)
-
-7.1 Jobs
-
-ProcessWardrobeItemJob
-
-Input: wardrobe_item_id
-Steps:
-	1.	Fetch image
-	2.	Generate thumbnail
-	3.	Optional segmentation mask
-	4.	Run wardrobe parser (category/colors/tags)
-	5.	Generate embeddings
-	6.	Upsert vector DB
-	7.	Update DB status fields
-
-ProcessOutfitSessionJob
-
-Input: outfit_session_id
-Steps:
-	1.	Fetch outfit photo
-	2.	Run outfit analyzer (garments + style signals)
-	3.	If wardrobe exists: retrieve candidate items
-	4.	Generate recs + feedback via LLM
-	5.	Persist feedback + recs
-	6.	Mark done
-
-7.2 Idempotency
-	•	Jobs must be retry-safe
-	•	Use “status + version” fields
-	•	Store model version used for outputs
-
-⸻
-
-8) Mobile App Specification
-
-8.1 Tech choices
-	•	Flutter
-	•	State management: Riverpod/Bloc
-	•	Local storage: Hive/SQLite
-	•	Networking: Dio
-	•	Image upload: background uploads with retry
-
-8.2 Core screens
-	1.	Onboarding
-	•	login
-	•	style preferences quick quiz
-	2.	Home
-	•	“Fit Check”
-	•	“What Should I Wear?”
-	•	“Add to Wardrobe”
-	3.	Fit Check flow
-	•	camera
-	•	context inputs
-	•	waiting screen (polling session)
-	•	results (feedback + recs)
-	4.	Wardrobe
-	•	grid by category
-	•	filters (color, season, formality)
-	•	item detail edit
-	5.	Outfit builder
-	•	3 outfit cards
-	•	tap to see reasoning
-	•	swap slot
-	6.	Saved outfits
-	7.	Subscription/paywall
-	8.	Settings (privacy/export/delete)
-
-8.3 Upload UX requirements
-	•	Pre-upload: optionally blur face on-device (toggle)
-	•	Compress images: target 1600px longest edge, JPEG quality 80
-	•	Show upload progress
-	•	Retry on fail
-
-⸻
-
-9) Infrastructure Specification
-
-9.1 Deployment (example on AWS)
-	•	API: ECS/Fargate (Laravel) or Kubernetes
-	•	AI service: ECS/Fargate with autoscaling (CPU/GPU if used)
-	•	Postgres: RDS
-	•	Redis: ElastiCache
-	•	Queue: SQS
-	•	Object storage: S3
-	•	CDN: CloudFront
-	•	Secrets: AWS Secrets Manager
-	•	Observability: CloudWatch + Sentry
-
-9.2 Environments
-	•	dev
-	•	staging
-	•	prod
-
-9.3 CI/CD
-	•	GitHub Actions
-	•	Steps:
-	•	lint + test
-	•	build docker images
-	•	migrate DB (with safe migrations)
-	•	deploy
-	•	Mobile:
-	•	fastlane for iOS/Android
-	•	TestFlight + internal testing tracks
-
-⸻
-
-10) Security Specification
-
-10.1 Authentication
-	•	Access token (JWT) short-lived
-	•	Refresh token long-lived, rotated
-	•	Device binding optional
-	•	Rate limiting on auth endpoints
-
-10.2 Authorization
-	•	Every resource is owned by user_id
-	•	Storage keys include user id
-	•	Signed URLs expire quickly (5–15 minutes)
-
-10.3 Data privacy controls
-	•	“Delete photo” deletes originals + derivatives
-	•	“Delete account” triggers:
-	•	DB delete cascade
-	•	S3 prefix delete
-	•	Qdrant vectors delete by user payload filter
-	•	Data export:
-	•	JSON export of wardrobe + saved outfits + feedback summaries
-
-⸻
-
-11) Admin Panel
-
-Features:
-	•	View users (minimal PII)
-	•	View processing failures
-	•	Re-run jobs
-	•	Manage prompt versions/config
-	•	See aggregate metrics (no raw photos by default)
-	•	Abuse reports / flagged content queue
-
-⸻
-
-12) Analytics & Experimentation
-
-12.1 Events to track
-	•	fitcheck_started
-	•	fitcheck_submitted
-	•	fitcheck_result_viewed
-	•	suggestion_applied (user taps “swap”)
-	•	wardrobe_item_added
-	•	wardrobe_item_confirmed
-	•	outfit_generated
-	•	subscription_started
-	•	trial_started
-	•	trial_converted
-	•	churned
-
-12.2 Quality metrics
-	•	Average time to result
-	•	User rating after feedback (“Was this helpful?”)
-	•	% of sessions with wardrobe-based recs
-	•	Retention D1/D7/D30
-
-⸻
-
-13) Testing Specification
-
-13.1 Backend tests
-	•	Unit tests for:
-	•	scoring algorithm
-	•	outfit builder constraints
-	•	receipt validation
-	•	Integration tests for:
-	•	upload + session creation
-	•	job processing pipeline with mocks
-	•	Contract tests for AI output schemas
-
-13.2 AI tests (critical)
-	•	Golden test set:
-	•	200 outfit images + expected style signals ranges
-	•	200 wardrobe items for tagging accuracy
-	•	Regression tests when prompt/model changes
-	•	Schema validation on every AI output (strict JSON)
-
-13.3 Mobile tests
-	•	Widget tests for flows
-	•	Integration tests for upload pipeline
-	•	Snapshot tests for results screens
-
-⸻
-
-14) MVP vs Full Build (Implementation Phases)
-
-Phase 1 (MVP): Fit Check + minimal wardrobe
-	•	Fit Check photo + context -> feedback
-	•	Wardrobe add item -> basic tagging
-	•	Manual wardrobe selection to build outfits (semi-auto)
-	•	Subscription paywall
-
-Phase 2: Real wardrobe intelligence
-	•	Embeddings + vector retrieval
-	•	Outfit builder generates full outfits
-	•	Saved outfits
-
-Phase 3: Conversational stylist + personalization
-	•	Threaded chat with iterative refinement
-	•	Personal style model (preferences learned)
-	•	Packing lists + seasonal recaps
-
-⸻
-
-15) Concrete “Build List” (What you actually implement)
-
-Backend (Laravel)
-	•	Models + migrations for all tables above
-	•	REST endpoints listed above
-	•	Signed upload endpoint + media finalize
-	•	Queue workers + job definitions
-	•	Webhooks for App Store / Play Store (or periodic verify)
-	•	Admin panel
-
-AI Service (FastAPI)
-	•	/analyze/outfit (photo -> structured signals)
-	•	/parse/wardrobe_item (photo -> metadata)
-	•	/embed/wardrobe_item (photo/text -> vector)
-	•	/recommend/outfit (signals + wardrobe candidates -> recs + feedback)
-	•	Qdrant client integration
-	•	Schema validation + retries
-
-Storage & processing
-	•	S3 bucket structure:
-	•	users/{userId}/outfits/{mediaId}.jpg
-	•	users/{userId}/wardrobe/{mediaId}.jpg
-	•	derivatives in .../derivatives/...
-
-Mobile
-	•	Auth + onboarding
-	•	Camera capture + compression
-	•	Context capture UI
-	•	Polling session status + display results
-	•	Wardrobe grid + add flow
-	•	Paywall + subscription status
-
-⸻
-
-
-
+Built with ❤️ for people who want to look good without thinking too hard about it.

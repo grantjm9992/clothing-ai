@@ -1,0 +1,154 @@
+version: '3.8'
+
+# Root docker-compose for entire Clothing AI monorepo
+# This orchestrates all services: Backend, AI Service, and databases
+
+services:
+  # Backend API (Laravel)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: clothing-ai-backend
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - AI_SERVICE_URL=http://ai-service:8001
+    networks:
+      - clothing-ai
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+      - ai-service
+
+  # AI Service (Python FastAPI)
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: clothing-ai-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./ai-service:/app
+      - ai-models:/app/models
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - QDRANT_URL=http://qdrant:6333
+    networks:
+      - clothing-ai
+    ports:
+      - "8001:8001"
+    depends_on:
+      - qdrant
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: clothing-ai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: clothing_ai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - clothing-ai
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache & Queue
+  redis:
+    image: redis:7-alpine
+    container_name: clothing-ai-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - clothing-ai
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: clothing-ai-qdrant
+    restart: unless-stopped
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - clothing-ai
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Mailpit (Email testing)
+  mailpit:
+    image: axllent/mailpit
+    container_name: clothing-ai-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - clothing-ai
+
+  # MinIO (S3-compatible storage for local development)
+  minio:
+    image: minio/minio:latest
+    container_name: clothing-ai-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+    networks:
+      - clothing-ai
+    ports:
+      - "9000:9000"  # API
+      - "9001:9001"  # Console
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+networks:
+  clothing-ai:
+    driver: bridge
+    name: clothing-ai-network
+
+volumes:
+  postgres-data:
+  redis-data:
+  qdrant-data:
+  minio-data:
+  ai-models:
