@@ -51,6 +51,9 @@ class MediaController extends Controller
             ]
         );
 
+        // Replace internal Docker hostname with localhost for external access
+        $uploadUrl = str_replace('http://minio:9000', 'http://localhost:9000', $uploadUrl);
+
         return response()->json([
             'id' => $mediaObject->id,
             'presigned_url' => $uploadUrl,
