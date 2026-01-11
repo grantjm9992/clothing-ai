@@ -49,9 +49,7 @@ class MediaObject extends Model
             return null;
         }
 
-        // For development with public bucket, use direct URL
-        $bucket = config('filesystems.disks.s3.bucket');
-        return "http://localhost:9000/{$bucket}/{$this->storage_key}";
+        return Storage::disk('s3')->url($this->storage_key);
     }
 
     public function getPresignedUrlAttribute(): ?string
@@ -60,8 +58,9 @@ class MediaObject extends Model
             return null;
         }
 
-        // For development with public bucket, use direct URL (no signature needed)
-        $bucket = config('filesystems.disks.s3.bucket');
-        return "http://localhost:9000/{$bucket}/{$this->storage_key}";
+        return Storage::disk('s3')->temporaryUrl(
+            $this->storage_key,
+            now()->addMinutes(15)
+        );
     }
 }
