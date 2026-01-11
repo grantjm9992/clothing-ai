@@ -42,15 +42,10 @@ class MediaController extends Controller
             'status' => 'pending',
         ]);
 
-        // Generate presigned URL
-        // MinIO will use MINIO_SERVER_URL (localhost:9000) for presigned URLs
-        $uploadUrl = Storage::disk('s3')->temporaryUrl(
-            $storageKey,
-            now()->addMinutes(15),
-            [
-                'ContentType' => $validated['mimeType'],
-            ]
-        );
+        // For development with public bucket, use direct URL instead of presigned
+        // This avoids signature mismatch between internal (minio:9000) and external (localhost:9000) access
+        $bucket = config('filesystems.disks.s3.bucket');
+        $uploadUrl = "http://localhost:9000/{$bucket}/{$storageKey}";
 
         return response()->json([
             'id' => $mediaObject->id,

@@ -49,8 +49,9 @@ class MediaObject extends Model
             return null;
         }
 
-        // MinIO will use MINIO_SERVER_URL (localhost:9000) for URL generation
-        return Storage::disk('s3')->url($this->storage_key);
+        // For development with public bucket, use direct URL
+        $bucket = config('filesystems.disks.s3.bucket');
+        return "http://localhost:9000/{$bucket}/{$this->storage_key}";
     }
 
     public function getPresignedUrlAttribute(): ?string
@@ -59,10 +60,8 @@ class MediaObject extends Model
             return null;
         }
 
-        // MinIO will use MINIO_SERVER_URL (localhost:9000) for presigned URLs
-        return Storage::disk('s3')->temporaryUrl(
-            $this->storage_key,
-            now()->addMinutes(15)
-        );
+        // For development with public bucket, use direct URL (no signature needed)
+        $bucket = config('filesystems.disks.s3.bucket');
+        return "http://localhost:9000/{$bucket}/{$this->storage_key}";
     }
 }
