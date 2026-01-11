@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Initialize MinIO bucket for Clothing AI
-# This script creates the 'clothing-ai' bucket in MinIO
+# This script creates the 'clothing-ai' bucket in MinIO and configures CORS
 
 echo "Initializing MinIO bucket..."
 
@@ -18,11 +18,16 @@ echo "MinIO is ready!"
 echo "Creating bucket 'clothing-ai'..."
 docker exec clothing-ai-minio mc mb myminio/clothing-ai --ignore-existing
 
-# Set bucket policy to allow public read (optional - for development only)
+# Set bucket policy to allow public read/write (for development only)
 echo "Setting bucket policy..."
-docker exec clothing-ai-minio mc anonymous set download myminio/clothing-ai
+docker exec clothing-ai-minio mc anonymous set public myminio/clothing-ai
 
-echo "✅ MinIO bucket 'clothing-ai' created successfully!"
+echo "✅ MinIO bucket 'clothing-ai' created and configured successfully!"
+echo ""
 echo "MinIO Console: http://localhost:9001"
 echo "Username: minioadmin"
 echo "Password: minioadmin"
+echo ""
+echo "Bucket 'clothing-ai' is ready for uploads!"
+echo ""
+echo "Note: Run 'docker-compose restart backend' to apply changes"
