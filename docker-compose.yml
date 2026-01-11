@@ -21,13 +21,15 @@ services:
       - DB_HOST=postgres
       - REDIS_HOST=redis
       - AI_SERVICE_URL=http://ai-service:8001
-      - AWS_ACCESS_KEY_ID=minioadmin
-      - AWS_SECRET_ACCESS_KEY=minioadmin
-      - AWS_DEFAULT_REGION=us-east-1
-      - AWS_BUCKET=clothing-ai
-      - AWS_ENDPOINT=http://minio:9000
-      - AWS_URL=http://localhost:9000
-      - AWS_USE_PATH_STYLE_ENDPOINT=true
+      # AWS S3 credentials are loaded from .env file instead of here
+      # Comment out for MinIO (local development):
+      # - AWS_ACCESS_KEY_ID=minioadmin
+      # - AWS_SECRET_ACCESS_KEY=minioadmin
+      # - AWS_DEFAULT_REGION=us-east-1
+      # - AWS_BUCKET=clothing-ai
+      # - AWS_ENDPOINT=http://minio:9000
+      # - AWS_URL=http://localhost:9000
+      # - AWS_USE_PATH_STYLE_ENDPOINT=true
     networks:
       - clothing-ai
     ports:
