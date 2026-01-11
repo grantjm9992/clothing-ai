@@ -43,12 +43,11 @@ class MediaController extends Controller
         ]);
 
         // Generate presigned URL for S3 upload
+        // Note: We don't include ContentType here to avoid signature issues
+        // The client will still send Content-Type header, but it won't be part of signature
         $uploadUrl = Storage::disk('s3')->temporaryUrl(
             $storageKey,
-            now()->addMinutes(15),
-            [
-                'ContentType' => $validated['mimeType'],
-            ]
+            now()->addMinutes(15)
         );
 
         return response()->json([
