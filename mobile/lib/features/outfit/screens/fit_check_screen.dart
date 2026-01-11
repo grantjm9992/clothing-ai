@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:image/image.dart' as img;
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/providers/providers.dart';
 import 'outfit_feedback_screen.dart';
@@ -287,15 +289,33 @@ class _FitCheckScreenState extends ConsumerState<FitCheckScreen> {
       );
 
       final mediaObjectId = presignData['id'];
+      final presignedUrl = presignData['presigned_url'];
 
-      // Step 2: TODO - Upload to S3 using presigned URL
-      // For now, we'll skip actual S3 upload and just mark as complete
+      // Step 2: Upload file to S3 using presigned URL
+      final fileBytes = await _imageFile!.readAsBytes();
+
+      // Get image dimensions
+      final decodedImage = img.decodeImage(fileBytes);
+      final imageWidth = decodedImage?.width;
+      final imageHeight = decodedImage?.height;
+
+      final uploadResponse = await http.put(
+        Uri.parse(presignedUrl),
+        body: fileBytes,
+        headers: {
+          'Content-Type': 'image/jpeg',
+        },
+      );
+
+      if (uploadResponse.statusCode != 200) {
+        throw Exception('Failed to upload image: ${uploadResponse.statusCode}');
+      }
 
       // Step 3: Mark upload as complete
       await apiService.completeUpload(
         mediaObjectId,
-        1600, // width
-        1200, // height
+        imageWidth,
+        imageHeight,
         null, // sha256
       );
 
