@@ -43,6 +43,7 @@ class MediaController extends Controller
         ]);
 
         // Generate presigned URL
+        // MinIO will use MINIO_SERVER_URL (localhost:9000) for presigned URLs
         $uploadUrl = Storage::disk('s3')->temporaryUrl(
             $storageKey,
             now()->addMinutes(15),
@@ -50,9 +51,6 @@ class MediaController extends Controller
                 'ContentType' => $validated['mimeType'],
             ]
         );
-
-        // Replace internal Docker hostname with localhost for external access
-        $uploadUrl = str_replace('http://minio:9000', 'http://localhost:9000', $uploadUrl);
 
         return response()->json([
             'id' => $mediaObject->id,

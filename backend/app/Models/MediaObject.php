@@ -49,10 +49,8 @@ class MediaObject extends Model
             return null;
         }
 
-        $url = Storage::disk('s3')->url($this->storage_key);
-
-        // Replace internal Docker hostname with localhost for external access
-        return str_replace('http://minio:9000', 'http://localhost:9000', $url);
+        // MinIO will use MINIO_SERVER_URL (localhost:9000) for URL generation
+        return Storage::disk('s3')->url($this->storage_key);
     }
 
     public function getPresignedUrlAttribute(): ?string
@@ -61,12 +59,10 @@ class MediaObject extends Model
             return null;
         }
 
-        $url = Storage::disk('s3')->temporaryUrl(
+        // MinIO will use MINIO_SERVER_URL (localhost:9000) for presigned URLs
+        return Storage::disk('s3')->temporaryUrl(
             $this->storage_key,
             now()->addMinutes(15)
         );
-
-        // Replace internal Docker hostname with localhost for external access
-        return str_replace('http://minio:9000', 'http://localhost:9000', $url);
     }
 }
