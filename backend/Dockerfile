@@ -26,16 +26,27 @@ RUN pecl install redis && docker-php-ext-enable redis
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy existing application directory contents
+# Copy composer files
+COPY composer.json /var/www/
+
+# Install dependencies
+RUN composer install --no-scripts --no-autoloader --no-dev --prefer-dist || true
+
+# Copy application
 COPY . /var/www
 
-# Copy existing application directory permissions
-RUN chown -R www-data:www-data /var/www
+# Generate optimized autoload files
+RUN composer dump-autoload --optimize || true
 
-# Change current user to www
+# Set permissions
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 755 /var/www/storage \
+    && chmod -R 755 /var/www/bootstrap/cache
+
+# Change current user to www-data
 USER www-data
 
-# Expose port 8000 and start php-fpm server
+# Expose port 8000
 EXPOSE 8000
 
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
