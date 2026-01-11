@@ -26,21 +26,21 @@ RUN pecl install redis && docker-php-ext-enable redis
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy composer files
-COPY composer.json /var/www/
-
-# Install dependencies (without lock file for now)
-RUN composer install --no-scripts --no-autoloader --no-dev --prefer-dist --ignore-platform-reqs
-
-# Copy application
+# Copy all application files
 COPY . /var/www
 
-# Generate optimized autoload files
-RUN composer dump-autoload --optimize --ignore-platform-reqs
+# Install dependencies without running scripts
+RUN composer install --no-scripts --no-interaction --no-dev --prefer-dist --ignore-platform-reqs
 
-# Create storage directories if they don't exist
+# Create vendor/autoload.php manually
+RUN composer dump-autoload --no-scripts --optimize --ignore-platform-reqs
+
+# Verify vendor directory exists
+RUN test -f /var/www/vendor/autoload.php || (echo "ERROR: vendor/autoload.php not created!" && exit 1)
+
+# Create storage directories
 RUN mkdir -p /var/www/storage/app/public \
-    && mkdir -p /var/www/storage/framework/cache \
+    && mkdir -p /var/www/storage/framework/cache/data \
     && mkdir -p /var/www/storage/framework/sessions \
     && mkdir -p /var/www/storage/framework/views \
     && mkdir -p /var/www/storage/logs \
