@@ -277,11 +277,30 @@ class _FitCheckScreenState extends ConsumerState<FitCheckScreen> {
     );
 
     try {
-      // TODO: Upload image and create session
-      // For now, simulate
-      await Future.delayed(const Duration(seconds: 2));
+      final apiService = ref.read(apiServiceProvider);
 
-      final context = {
+      // Step 1: Get presigned URL for image upload
+      final presignData = await apiService.getPresignedUrl(
+        'outfit_photo',
+        'image/jpeg',
+        _imageFile!.path.split('/').last,
+      );
+
+      final mediaObjectId = presignData['id'];
+
+      // Step 2: TODO - Upload to S3 using presigned URL
+      // For now, we'll skip actual S3 upload and just mark as complete
+
+      // Step 3: Mark upload as complete
+      await apiService.completeUpload(
+        mediaObjectId,
+        1600, // width
+        1200, // height
+        null, // sha256
+      );
+
+      // Step 4: Create outfit session
+      final sessionContext = {
         'occasion': _occasionController.text,
         'vibe': _selectedVibe,
         'location': _selectedLocation,
@@ -289,13 +308,17 @@ class _FitCheckScreenState extends ConsumerState<FitCheckScreen> {
         'notes': _notesController.text,
       };
 
-      // Navigate to feedback screen
+      final session = await ref
+          .read(outfitSessionsProvider.notifier)
+          .createSession(mediaObjectId, sessionContext);
+
+      // Navigate to feedback screen with real session ID
       if (mounted) {
         Navigator.of(this.context).pop(); // Close loading dialog
         Navigator.of(this.context).push(
           MaterialPageRoute(
-            builder: (context) => const OutfitFeedbackScreen(
-              sessionId: 'demo-session-id',
+            builder: (context) => OutfitFeedbackScreen(
+              sessionId: session.id,
             ),
           ),
         );
@@ -304,7 +327,10 @@ class _FitCheckScreenState extends ConsumerState<FitCheckScreen> {
       if (mounted) {
         Navigator.of(context).pop(); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppTheme.error,
+          ),
         );
       }
     }
