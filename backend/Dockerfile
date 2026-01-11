@@ -36,7 +36,7 @@ RUN composer install --no-scripts --no-autoloader --no-dev --prefer-dist --ignor
 COPY . /var/www
 
 # Generate optimized autoload files
-RUN composer dump-autoload --optimize
+RUN composer dump-autoload --optimize --ignore-platform-reqs
 
 # Create storage directories if they don't exist
 RUN mkdir -p /var/www/storage/app/public \
