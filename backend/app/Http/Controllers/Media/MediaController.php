@@ -52,9 +52,9 @@ class MediaController extends Controller
         );
 
         return response()->json([
-            'uploadUrl' => $uploadUrl,
-            'storageKey' => $storageKey,
-            'mediaObjectId' => $mediaObject->id,
+            'id' => $mediaObject->id,
+            'presigned_url' => $uploadUrl,
+            'storage_key' => $storageKey,
         ]);
     }
 
