@@ -29,14 +29,24 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy all application files
 COPY . /var/www
 
+# Debug: Show composer.json exists
+RUN echo "=== Checking composer.json ===" && ls -la composer.json
+
 # Install dependencies without running scripts
-RUN composer install --no-scripts --no-interaction --no-dev --prefer-dist --ignore-platform-reqs
+RUN echo "=== Running composer install ===" \
+    && composer install --no-scripts --no-interaction --no-dev --prefer-dist --ignore-platform-reqs \
+    && echo "=== Composer install completed ==="
 
 # Create vendor/autoload.php manually
-RUN composer dump-autoload --no-scripts --optimize --ignore-platform-reqs
+RUN echo "=== Running composer dump-autoload ===" \
+    && composer dump-autoload --no-scripts --optimize --ignore-platform-reqs \
+    && echo "=== Dump-autoload completed ==="
 
-# Verify vendor directory exists
-RUN test -f /var/www/vendor/autoload.php || (echo "ERROR: vendor/autoload.php not created!" && exit 1)
+# Debug: Show vendor directory
+RUN echo "=== Checking vendor directory ===" && ls -la vendor/ | head -20
+
+# Verify vendor/autoload.php exists
+RUN test -f /var/www/vendor/autoload.php && echo "SUCCESS: vendor/autoload.php exists!" || (echo "ERROR: vendor/autoload.php not created!" && exit 1)
 
 # Create storage directories
 RUN mkdir -p /var/www/storage/app/public \
