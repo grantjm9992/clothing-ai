@@ -17,7 +17,7 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: 'Inter',
+      // fontFamily: 'Inter', // TODO: Uncomment when Inter fonts are added
       colorScheme: const ColorScheme.light(
         primary: primary,
         secondary: accent,
@@ -39,7 +39,7 @@ class AppTheme {
           color: textPrimary,
           fontSize: 17,
           fontWeight: FontWeight.w600,
-          fontFamily: 'Inter',
+          // fontFamily: 'Inter',
         ),
       ),
       cardTheme: CardThemeData(
@@ -61,7 +61,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            fontFamily: 'Inter',
+            // fontFamily: 'Inter',
           ),
         ),
       ),
@@ -76,7 +76,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            fontFamily: 'Inter',
+            // fontFamily: 'Inter',
           ),
         ),
       ),
