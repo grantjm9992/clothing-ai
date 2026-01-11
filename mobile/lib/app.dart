@@ -4,61 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/wardrobe/screens/wardrobe_screen.dart';
 import 'features/outfit/screens/fit_check_screen.dart';
-
-// Auth Screen
-class LoginScreen extends ConsumerWidget {
-  const LoginScreen({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(Icons.checkroom, size: 64, color: Colors.white),
-              ),
-              const SizedBox(height: 32),
-              Text('Clothing AI', style: AppTheme.h1, textAlign: TextAlign.center),
-              const SizedBox(height: 12),
-              Text(
-                'Your personal AI stylist',
-                style: AppTheme.bodyLarge.copyWith(color: AppTheme.textSecondary),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 48),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => context.go('/home'),
-                  icon: const Icon(Icons.arrow_forward),
-                  label: const Text('Get Started'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'AI-powered outfit feedback and wardrobe intelligence',
-                style: AppTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+import 'features/auth/screens/login_screen.dart';
+import 'features/auth/screens/signup_screen.dart';
+import 'features/auth/providers/auth_provider.dart';
 
 // Home Screen
 class HomeScreen extends ConsumerWidget {
@@ -211,6 +159,10 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+    final profile = user?['profile'];
+
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: ListView(
@@ -221,8 +173,16 @@ class ProfileScreen extends ConsumerWidget {
             child: Icon(Icons.person, size: 50),
           ),
           const SizedBox(height: 16),
-          Text('User Name', style: AppTheme.h2, textAlign: TextAlign.center),
-          Text('user@example.com', style: AppTheme.bodyMedium, textAlign: TextAlign.center),
+          Text(
+            profile?['display_name'] ?? 'User',
+            style: AppTheme.h2,
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            user?['email'] ?? '',
+            style: AppTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 32),
           ListTile(
             leading: const Icon(Icons.settings),
@@ -250,7 +210,12 @@ class ProfileScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           OutlinedButton(
-            onPressed: () {},
+            onPressed: () async {
+              await ref.read(authProvider.notifier).logout();
+              if (context.mounted) {
+                context.go('/login');
+              }
+            },
             child: const Text('Log Out'),
           ),
         ],
@@ -259,15 +224,36 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-// Router
-final _router = GoRouter(
-  initialLocation: '/login',
-  routes: [
-    GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-    GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
-    GoRoute(path: '/wardrobe', builder: (_, __) => const WardrobeScreen()),
-    GoRoute(path: '/fit-check', builder: (_, __) => const FitCheckScreen()),
-    GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+// Router Configuration
+final routerProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authProvider);
+
+  return GoRouter(
+    initialLocation: '/login',
+    redirect: (context, state) {
+      final isAuthenticated = authState.isAuthenticated;
+      final isLoginPage = state.matchedLocation == '/login';
+      final isSignUpPage = state.matchedLocation == '/signup';
+
+      // Redirect to login if not authenticated and not already on auth pages
+      if (!isAuthenticated && !isLoginPage && !isSignUpPage) {
+        return '/login';
+      }
+
+      // Redirect to home if authenticated and on login/signup
+      if (isAuthenticated && (isLoginPage || isSignUpPage)) {
+        return '/home';
+      }
+
+      return null;
+    },
+    routes: [
+      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/signup', builder: (_, __) => const SignUpScreen()),
+      GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
+      GoRoute(path: '/wardrobe', builder: (_, __) => const WardrobeScreen()),
+      GoRoute(path: '/fit-check', builder: (_, __) => const FitCheckScreen()),
+      GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
     GoRoute(
       path: '/outfit-builder',
       builder: (_, __) => Scaffold(
@@ -299,8 +285,9 @@ final _router = GoRouter(
         ),
       ),
     ),
-  ],
-);
+    ],
+  );
+});
 
 // Main App
 class ClothingAIApp extends ConsumerWidget {
@@ -308,11 +295,13 @@ class ClothingAIApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
     return MaterialApp.router(
       title: 'Clothing AI',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      routerConfig: _router,
+      routerConfig: router,
     );
   }
 }
