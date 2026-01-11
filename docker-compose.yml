@@ -14,6 +14,7 @@ services:
     working_dir: /var/www
     volumes:
       - ./backend:/var/www
+      - backend-vendor:/var/www/vendor  # Preserve vendor from Docker build
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
@@ -40,6 +41,7 @@ services:
     volumes:
       - ./ai-service:/app
       - ai-models:/app/models
+      - ai-venv:/app/venv  # Preserve Python virtual environment
     environment:
       - ENVIRONMENT=development
       - DEBUG=true
@@ -152,3 +154,5 @@ volumes:
   qdrant-data:
   minio-data:
   ai-models:
+  backend-vendor:
+  ai-venv:
