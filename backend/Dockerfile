@@ -38,6 +38,14 @@ COPY . /var/www
 # Generate optimized autoload files
 RUN composer dump-autoload --optimize || true
 
+# Create storage directories if they don't exist
+RUN mkdir -p /var/www/storage/app/public \
+    && mkdir -p /var/www/storage/framework/cache \
+    && mkdir -p /var/www/storage/framework/sessions \
+    && mkdir -p /var/www/storage/framework/views \
+    && mkdir -p /var/www/storage/logs \
+    && mkdir -p /var/www/bootstrap/cache
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage \
