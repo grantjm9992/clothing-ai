@@ -29,14 +29,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy composer files
 COPY composer.json /var/www/
 
-# Install dependencies
-RUN composer install --no-scripts --no-autoloader --no-dev --prefer-dist || true
+# Install dependencies (without lock file for now)
+RUN composer install --no-scripts --no-autoloader --no-dev --prefer-dist --ignore-platform-reqs
 
 # Copy application
 COPY . /var/www
 
 # Generate optimized autoload files
-RUN composer dump-autoload --optimize || true
+RUN composer dump-autoload --optimize
 
 # Create storage directories if they don't exist
 RUN mkdir -p /var/www/storage/app/public \
