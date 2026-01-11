@@ -7,6 +7,7 @@ use App\Models\MediaObject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Aws\S3\S3Client;
 
 class MediaController extends Controller
 {
@@ -42,13 +43,23 @@ class MediaController extends Controller
             'status' => 'pending',
         ]);
 
-        // Generate presigned URL for S3 upload
-        // Note: We don't include ContentType here to avoid signature issues
-        // The client will still send Content-Type header, but it won't be part of signature
-        $uploadUrl = Storage::disk('s3')->temporaryUrl(
-            $storageKey,
-            now()->addMinutes(15)
-        );
+        // Generate presigned URL using S3 client directly for better control
+        $s3Client = new S3Client([
+            'version' => 'latest',
+            'region' => config('filesystems.disks.s3.region'),
+            'credentials' => [
+                'key' => config('filesystems.disks.s3.key'),
+                'secret' => config('filesystems.disks.s3.secret'),
+            ],
+        ]);
+
+        $command = $s3Client->getCommand('PutObject', [
+            'Bucket' => config('filesystems.disks.s3.bucket'),
+            'Key' => $storageKey,
+        ]);
+
+        $presignedRequest = $s3Client->createPresignedRequest($command, '+15 minutes');
+        $uploadUrl = (string) $presignedRequest->getUri();
 
         return response()->json([
             'id' => $mediaObject->id,
