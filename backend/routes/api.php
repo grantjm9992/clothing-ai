@@ -20,9 +20,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
-    // Media
-    Route::post('/media/presign', [MediaController::class, 'presign']);
-    Route::post('/media/complete', [MediaController::class, 'complete']);
+    // Media (with rate limiting)
+    Route::middleware([
+        'throttle:' . config('media.rate_limit.max_attempts', 20) . ',' . config('media.rate_limit.decay_minutes', 1)
+    ])->group(function () {
+        Route::post('/media/presign', [MediaController::class, 'presign']);
+        Route::post('/media/complete', [MediaController::class, 'complete']);
+    });
     Route::get('/media/{id}', [MediaController::class, 'show']);
     Route::delete('/media/{id}', [MediaController::class, 'destroy']);
 

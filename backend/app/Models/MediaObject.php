@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\S3Service;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,17 +20,21 @@ class MediaObject extends Model
         'type',
         'storage_key',
         'mime_type',
+        'file_size',
         'width',
         'height',
         'sha256',
         'status',
+        'uploaded_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'file_size' => 'integer',
             'width' => 'integer',
             'height' => 'integer',
+            'uploaded_at' => 'datetime',
         ];
     }
 
@@ -58,9 +63,9 @@ class MediaObject extends Model
             return null;
         }
 
-        return Storage::disk('s3')->temporaryUrl(
+        return S3Service::generatePresignedGetUrl(
             $this->storage_key,
-            now()->addMinutes(15)
+            config('media.presigned_url_expiry')
         );
     }
 }
