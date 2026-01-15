@@ -2,10 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/file_utils.dart';
+import '../../../core/config/app_config.dart';
 import '../../../shared/providers/providers.dart';
+import '../providers/upload_progress_provider.dart';
 import 'outfit_feedback_screen.dart';
 
 class FitCheckScreen extends ConsumerStatefulWidget {
@@ -47,6 +49,8 @@ class _FitCheckScreenState extends ConsumerState<FitCheckScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final uploadProgress = ref.watch(uploadProgressProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Fit Check'),
@@ -159,7 +163,9 @@ class _FitCheckScreenState extends ConsumerState<FitCheckScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _imageFile != null ? _submitForFeedback : null,
+                  onPressed: _imageFile != null && uploadProgress.step != UploadStep.uploading
+                      ? _submitForFeedback
+                      : null,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
@@ -243,12 +249,28 @@ class _FitCheckScreenState extends ConsumerState<FitCheckScreen> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
       source: source,
-      maxWidth: 1600,
-      imageQuality: 85,
+      maxWidth: AppConfig.maxImageWidth.toDouble(),
+      imageQuality: AppConfig.imageQuality,
     );
 
     if (pickedFile != null) {
-      setState(() => _imageFile = File(pickedFile.path));
+      final file = File(pickedFile.path);
+
+      // Validate file before setting
+      final validation = await FileUtils.validateImageFile(file);
+      if (!validation.isValid) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(validation.error ?? 'Invalid file'),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
+        return;
+      }
+
+      setState(() => _imageFile = file);
     }
   }
 
@@ -257,41 +279,48 @@ class _FitCheckScreenState extends ConsumerState<FitCheckScreen> {
       return;
     }
 
-    // Show loading dialog
+    final apiService = ref.read(apiServiceProvider);
+    final progressNotifier = ref.read(uploadProgressProvider.notifier);
+
+    // Show upload progress dialog
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: Card(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Analyzing your outfit...'),
-              ],
-            ),
-          ),
-        ),
+      builder: (dialogContext) => _UploadProgressDialog(
+        onCancel: () {
+          apiService.cancelUpload();
+          Navigator.of(dialogContext).pop();
+          progressNotifier.reset();
+        },
       ),
     );
 
     try {
-      final apiService = ref.read(apiServiceProvider);
+      // Step 1: Validate file
+      progressNotifier.setValidating();
+      final validation = await FileUtils.validateImageFile(_imageFile!);
 
-      // Step 1: Get presigned URL for image upload
+      if (!validation.isValid) {
+        throw Exception(validation.error ?? 'Invalid file');
+      }
+
+      final mimeType = validation.mimeType!;
+      final fileSize = validation.fileSize!;
+      final fileName = _imageFile!.path.split('/').last;
+
+      // Step 2: Get presigned URL for image upload
+      progressNotifier.setGettingPresignedUrl();
       final presignData = await apiService.getPresignedUrl(
         'outfit_photo',
-        'image/jpeg',
-        _imageFile!.path.split('/').last,
+        mimeType,
+        fileName,
+        fileSize,
       );
 
       final mediaObjectId = presignData['id'];
       final presignedUrl = presignData['presigned_url'];
 
-      // Step 2: Upload file to S3 using presigned URL
+      // Step 3: Upload file to S3 using presigned URL
       final fileBytes = await _imageFile!.readAsBytes();
 
       // Get image dimensions
@@ -299,19 +328,17 @@ class _FitCheckScreenState extends ConsumerState<FitCheckScreen> {
       final imageWidth = decodedImage?.width;
       final imageHeight = decodedImage?.height;
 
-      final uploadResponse = await http.put(
-        Uri.parse(presignedUrl),
-        body: fileBytes,
-        headers: {
-          'Content-Type': 'image/jpeg',
+      await apiService.uploadToPresignedUrl(
+        presignedUrl,
+        fileBytes,
+        mimeType,
+        onProgress: (progress) {
+          progressNotifier.setUploading(progress);
         },
       );
 
-      if (uploadResponse.statusCode != 200) {
-        throw Exception('Failed to upload image: ${uploadResponse.statusCode}');
-      }
-
-      // Step 3: Mark upload as complete
+      // Step 4: Mark upload as complete and verify
+      progressNotifier.setVerifying();
       await apiService.completeUpload(
         mediaObjectId,
         imageWidth,
@@ -319,7 +346,8 @@ class _FitCheckScreenState extends ConsumerState<FitCheckScreen> {
         null, // sha256
       );
 
-      // Step 4: Create outfit session
+      // Step 5: Create outfit session
+      progressNotifier.setCreatingSession();
       final sessionContext = {
         'occasion': _occasionController.text,
         'vibe': _selectedVibe,
@@ -332,10 +360,12 @@ class _FitCheckScreenState extends ConsumerState<FitCheckScreen> {
           .read(outfitSessionsProvider.notifier)
           .createSession(mediaObjectId, sessionContext);
 
-      // Navigate to feedback screen with real session ID
+      progressNotifier.setComplete();
+
+      // Navigate to feedback screen
       if (mounted) {
-        Navigator.of(this.context).pop(); // Close loading dialog
-        Navigator.of(this.context).push(
+        Navigator.of(context).pop(); // Close progress dialog
+        Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => OutfitFeedbackScreen(
               sessionId: session.id,
@@ -344,15 +374,106 @@ class _FitCheckScreenState extends ConsumerState<FitCheckScreen> {
         );
       }
     } catch (e) {
+      final progressNotifier = ref.read(uploadProgressProvider.notifier);
+      progressNotifier.setError(e.toString());
+
+      await Future.delayed(const Duration(seconds: 2));
+
       if (mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
+        Navigator.of(context).pop(); // Close progress dialog
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(e.toString()),
             backgroundColor: AppTheme.error,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: _submitForFeedback,
+              textColor: Colors.white,
+            ),
           ),
         );
+
+        progressNotifier.reset();
       }
     }
+  }
+}
+
+class _UploadProgressDialog extends ConsumerWidget {
+  final VoidCallback onCancel;
+
+  const _UploadProgressDialog({
+    required this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(uploadProgressProvider);
+
+    return AlertDialog(
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (progress.step != UploadStep.error) ...[
+            CircularProgressIndicator(
+              value: progress.progress,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              progress.stepDescription,
+              style: AppTheme.h3,
+              textAlign: TextAlign.center,
+            ),
+            if (progress.message != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                progress.message!,
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+            const SizedBox(height: 8),
+            Text(
+              '${progress.progressPercentage}%',
+              style: AppTheme.bodyLarge.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.accent,
+              ),
+            ),
+          ] else ...[
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppTheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Upload Failed',
+              style: AppTheme.h3,
+            ),
+            if (progress.errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                progress.errorMessage!,
+                style: AppTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ],
+        ],
+      ),
+      actions: [
+        if (progress.step == UploadStep.uploading ||
+            progress.step == UploadStep.gettingPresignedUrl)
+          TextButton(
+            onPressed: onCancel,
+            child: const Text('Cancel'),
+          ),
+      ],
+    );
   }
 }
